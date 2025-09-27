@@ -18,10 +18,10 @@ export default function Home() {
           <div id="navbar-collapse-with-animation" className="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow sm:block">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end sm:ps-7">
               <Link href="/dashboard" className="flex items-center gap-x-2 font-medium text-gray-700 hover:text-blue-600 sm:border-s sm:border-gray-300/50 py-2 sm:py-0 sm:ms-4 sm:my-6 sm:ps-6 dark:border-neutral-700 dark:text-neutral-300 dark:hover:text-blue-500 backdrop-blur-sm bg-white/10 px-4 rounded-lg" >
-                {/* <svg className="flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <svg className="flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                   <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
-                </svg> */}
-                {/* Get Started */}
+                </svg>
+                Get Started
               </Link>
             </div>
           </div>
@@ -33,20 +33,20 @@ export default function Home() {
         {/* Geometric background that extends beyond screen height to cover features */}
         <div className="absolute inset-0" style={{ height: '150vh' }}>
           <HeroGeometric
-            badge="CompileCraft"
+            badge="Creator AI"
             title1="AI Content"
             title2="Generator"
           />
         </div>
         
         {/* Content overlay positioned in front of background - positioned at bottom of hero */}
-        <div className="absolute bottom-0 left-0 right-0 z-32 pb-32 px-4 sm:px-6 lg:px-8">
+        <div className="absolute bottom-0 left-0 right-0 z-30 pb-32 px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             {/* Get Started Button - positioned directly below the title */}
-            <div className="mb-3">
+            <div className="mb-8">
               <HoverButton href="/dashboard">
                 Get started
-                {/* <svg className="flex-shrink-0 size-4 ml-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg> */}
+                <svg className="flex-shrink-0 size-4 ml-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
               </HoverButton>
             </div>
             
