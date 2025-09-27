@@ -179,7 +179,7 @@ export default function ContentClient({ params, initialContent }: Props) {
                     {isContentLoaded ? (
                         <RoomProvider 
                             id={roomId} 
-                            initialPresence={{ cursor: null }} 
+                            initialPresence={{ cursor: null, isTyping: false }} 
                             initialStorage={{ content: aiOutput || '' }}
                         >
                             <CollaborativeEditor 

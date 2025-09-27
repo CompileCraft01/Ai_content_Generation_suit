@@ -9,7 +9,7 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { db } from '@/utils/db'
 import { AIOutput } from '@/utils/schema'
-import { RoomProvider, useOthers } from '@/liveblocks.config'
+import { RoomProvider, useOthers, useMyPresence } from '@/liveblocks.config'
 import { CollaborativeEditor } from '@/components/CollaborativeEditor'
 import moment from 'moment'
 import { useUser } from '@clerk/nextjs'
@@ -21,11 +21,52 @@ function ActiveCollaborators() {
     const others = useOthers();
     return (
         <div className="flex -space-x-2">
-            {others.map(({ connectionId, info }: { connectionId: string; info: any }) => (
-                info?.avatar && (
-                    <Image key={connectionId} src={info.avatar} alt={info.name ?? 'Anonymous'} width={32} height={32} className="rounded-full border-2 border-white" title={info.name ?? 'Anonymous'} />
-                )
-            ))}
+            {others.map(({ connectionId, info }: { connectionId: string; info: any }) => {
+                const userName = info?.name ?? 'Anonymous';
+                const userAvatar = info?.avatar;
+                
+                return (
+                    <div key={connectionId} className="relative">
+                        {userAvatar ? (
+                            <Image 
+                                src={userAvatar} 
+                                alt={userName} 
+                                width={32} 
+                                height={32} 
+                                className="rounded-full border-2 border-white" 
+                                title={userName}
+                            />
+                        ) : (
+                            <div 
+                                className="w-8 h-8 rounded-full border-2 border-white bg-blue-500 flex items-center justify-center text-white text-xs font-semibold"
+                                title={userName}
+                            >
+                                {userName.charAt(0).toUpperCase()}
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+// A component to show who is currently typing
+function TypingIndicator() {
+    const others = useOthers();
+    const typingUsers = others.filter(({ presence }) => presence?.isTyping);
+    
+    if (typingUsers.length === 0) return null;
+    
+    return (
+        <div className="text-sm text-gray-400 italic">
+            {typingUsers.length === 1 ? (
+                <span>{typingUsers[0].info?.name ?? 'Someone'} is typing...</span>
+            ) : typingUsers.length === 2 ? (
+                <span>{typingUsers[0].info?.name ?? 'Someone'} and {typingUsers[1].info?.name ?? 'someone'} are typing...</span>
+            ) : (
+                <span>{typingUsers.length} people are typing...</span>
+            )}
         </div>
     );
 }
@@ -127,10 +168,17 @@ function CreateNewContent(props:PROPS) {
             </div>
         )}
         
-        <RoomProvider id={roomId} initialPresence={{ cursor: null }}>
+        <RoomProvider 
+            id={roomId} 
+            initialPresence={{ cursor: null, isTyping: false }}
+            initialStorage={{ content: initialContent || '' }}
+        >
             <div className='bg-slate-800 shadow-lg border border-slate-700 rounded-lg'>
                 <div className='p-5 flex justify-between items-center border-b border-slate-700'>
-                    <h3 className='font-medium text-lg text-white'>Collaborative Editor</h3>
+                    <div className='flex flex-col'>
+                        <h3 className='font-medium text-lg text-white'>Collaborative Editor</h3>
+                        <TypingIndicator />
+                    </div>
                     <ActiveCollaborators />
                 </div>
                 <div className='p-2'>
