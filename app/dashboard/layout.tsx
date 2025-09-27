@@ -51,4 +51,3 @@ function layout({
 }
 
 export default layout
-export { DocumentContext }

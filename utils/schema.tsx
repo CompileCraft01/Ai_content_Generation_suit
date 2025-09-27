@@ -4,6 +4,7 @@ export const AIOutput=pgTable('aiOutput',{
     id:serial('id').primaryKey(),
     formData:varchar('formData'),
     aiResponse:text('aiResponse'),
+    mindMapData:text('mindMapData'),
     templateSlug:varchar('templateSlug'),
     documentId:varchar('documentId'),
     createdBy:varchar('createdBy'),

@@ -1,5 +1,5 @@
 // File: liveblocks.config.ts
-import { createClient } from "@liveblocks/client";
+import { createClient, LiveObject } from "@liveblocks/client";
 import { createRoomContext, createLiveblocksContext } from "@liveblocks/react";
 
 const client = createClient({
@@ -8,10 +8,24 @@ const client = createClient({
 
 type Presence = {
   cursor: { x: number; y: number } | null;
+  isTyping: boolean;
+};
+
+// Define the structure of a mind map node
+type MindMapNode = {
+  id: string;
+  text: string;
+  children: MindMapNode[];
+  x?: number;
+  y?: number;
 };
 
 type Storage = {
   content: string;
+  // mindMap will hold the entire state of our mind map.
+  mindMap: LiveObject<{
+    root: MindMapNode;
+  }>;
 };
 
 
