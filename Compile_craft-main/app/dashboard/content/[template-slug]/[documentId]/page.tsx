@@ -1,0 +1,148 @@
+// File: app/dashboard/content/[template-slug]/[documentId]/page.tsx
+"use client"
+import React, { useState, useEffect, useMemo } from 'react'
+import FormSection from '../../_components/FormSection'
+import { TEMPLATE } from '../../../_components/TemplateListSection'
+import Templates from '@/app/(data)/Templates'
+import { Button } from '@/components/ui/button'
+import { ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
+import { db } from '@/utils/db'
+import { AIOutput } from '@/utils/schema'
+import { RoomProvider, useOthers } from '@/liveblocks.config'
+import { CollaborativeEditor } from '@/components/CollaborativeEditor'
+import moment from 'moment'
+import { useUser } from '@clerk/nextjs'
+import * as Y from 'yjs';
+import Image from 'next/image'
+
+// A component to show the avatars of other users
+function ActiveCollaborators() {
+    const others = useOthers();
+    return (
+        <div className="flex -space-x-2">
+            {others.map(({ connectionId, info }: { connectionId: string; info: any }) => (
+                info?.avatar && (
+                    <Image key={connectionId} src={info.avatar} alt={info.name ?? 'Anonymous'} width={32} height={32} className="rounded-full border-2 border-white" title={info.name ?? 'Anonymous'} />
+                )
+            ))}
+        </div>
+    );
+}
+
+interface PROPS{
+    params:{
+        'template-slug':string,
+        'documentId': string
+    }
+}
+
+function CreateNewContent(props:PROPS) {
+    const selectedTemplate:TEMPLATE|undefined=Templates?.find((item)=>item.slug==props.params['template-slug']);
+    const [loading,setLoading]=useState(false);
+    const [aiOutput,setAiOutput]=useState<string>('');
+    const [initialContent,setInitialContent]=useState<string>('');
+    const [showForm,setShowForm]=useState<boolean>(true);
+    const {user}=useUser();
+    
+    const roomId = props.params.documentId;
+    const yDoc = useMemo(() => new Y.Doc(), []);
+
+    const GenerateAIContent=async(formData:any)=>{
+        setLoading(true);
+        const selectedTemplatePrompt=selectedTemplate?.aiPrompt;
+        const userRequest = JSON.stringify(formData)+", "+selectedTemplatePrompt;
+
+        const systemPrompt = `You are "Creator AI," an expert content creation assistant. Your goal is to provide a helpful, well-structured response. Follow these formatting rules strictly: 1. Start with a brief, friendly introductory sentence. 2. Structure the main content with paragraphs and bullet points using newlines. 3. CRITICAL: The entire response must be plain text. Do not use any HTML or Markdown formatting.`;
+        const FinalAIPrompt = systemPrompt + userRequest;
+        
+        try {
+            const response = await fetch('/api/generate-content', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: FinalAIPrompt })
+            });
+            
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+            
+            setAiOutput(data.text);
+            setInitialContent(data.text);
+            await SaveInDb(JSON.stringify(formData),selectedTemplate?.slug,data.text)
+        } catch (error) {
+            console.error('Content generation failed:', error);
+            setAiOutput('Failed to generate content. Please try again.');
+        }
+        setLoading(false);
+    }
+
+    const SaveInDb=async(formData:any,slug:any,aiResp:string)=>{
+        const result=await db.insert(AIOutput).values({
+            formData:formData,
+            templateSlug:slug,
+            documentId: props.params.documentId,
+            aiResponse:aiResp,
+            createdBy:user?.primaryEmailAddress?.emailAddress,
+            createdAt:moment().format('DD/MM/yyyy'),
+        });
+        console.log(result);
+    }
+
+    // Load previously saved content
+    useEffect(()=>{
+        const load = async()=>{
+            const res:any = await db.query.AIOutput.findFirst({
+                where: (row:any, { eq }:any) => eq(row.documentId, props.params.documentId),
+                orderBy: (row:any, { desc }:any) => desc(row.id)
+            });
+            if(res?.aiResponse){
+                setAiOutput(res.aiResponse);
+                setInitialContent(res.aiResponse);
+            }
+            // Always show the form
+            setShowForm(true);
+        };
+        load();
+    },[props.params.documentId])
+
+ return (
+    <div className='p-5 bg-slate-900 min-h-screen'>
+        <div className='mb-5'>
+            <Link href="/dashboard">
+                <Button variant="outline" className='mb-3'>
+                    <ArrowLeft className='w-4 h-4 mr-2'/> Back to Templates
+                </Button>
+            </Link>
+            <h1 className='text-2xl font-bold text-white'>{selectedTemplate?.name}</h1>
+            <p className='text-gray-300'>{selectedTemplate?.desc}</p>
+        </div>
+        
+        {showForm && (
+            <div className='mb-5'>
+                <FormSection 
+                    selectedTemplate={selectedTemplate}
+                    userFormInput={(v:any)=>GenerateAIContent(v)}
+                    loading={loading} 
+                />
+            </div>
+        )}
+        
+        <RoomProvider id={roomId} initialPresence={{ cursor: null }}>
+            <div className='bg-slate-800 shadow-lg border border-slate-700 rounded-lg'>
+                <div className='p-5 flex justify-between items-center border-b border-slate-700'>
+                    <h3 className='font-medium text-lg text-white'>Collaborative Editor</h3>
+                    <ActiveCollaborators />
+                </div>
+                <div className='p-2'>
+                    <CollaborativeEditor 
+                        document={yDoc}
+                        initialContent={initialContent}
+                    />
+                </div>
+            </div>
+        </RoomProvider>
+    </div>
+  )
+}
+
+export default CreateNewContent
