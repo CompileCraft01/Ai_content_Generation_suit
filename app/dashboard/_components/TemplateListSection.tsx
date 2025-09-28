@@ -1,6 +1,6 @@
 import Templates from '@/app/(data)/Templates'
 import React, { useEffect, useState } from 'react'
-import TemplateCard from './TemplateCard'
+import { HoverEffect } from "@/components/ui/hover-effect"
 
 export interface TEMPLATE{
     name:string,
@@ -36,12 +36,20 @@ function TemplateListSection({userSearchInput}:any) {
       }
   },[userSearchInput])
 
+  // Transform the data for HoverEffect component
+  const transformedItems = templateList.map((template) => ({
+    title: template.name,
+    description: template.desc,
+    icon: template.icon,
+    // CRITICAL: This preserves the unique document linking functionality.
+    link: `/dashboard/content/${template.slug}/${Date.now()}`
+  }));
 
   return (
-    <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 p-10 bg-slate-900'>
-        {templateList.map((item:TEMPLATE,index:number)=>(
-            <TemplateCard {...item} key={index} />
-        ))}
+    <div className='p-10 bg-black'>
+      <div className="max-w-7xl mx-auto">
+        <HoverEffect items={transformedItems} />
+      </div>
     </div>
   )
 }

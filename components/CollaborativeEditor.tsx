@@ -43,7 +43,7 @@ export function CollaborativeEditor({ document, initialContent }: CollaborativeE
     const [provider, setProvider] = useState<any>(null);
 
     // Mutation to sync editor content to Liveblocks storage
-    const syncContentToStorage = useMutation(({ storage }, content: string) => {
+    const syncContentToStorageMutation = useMutation(({ storage }, content: string) => {
         try {
             const currentContent = storage.get('content');
             // Only update if content is different to prevent unnecessary updates
@@ -55,6 +55,20 @@ export function CollaborativeEditor({ document, initialContent }: CollaborativeE
             console.log('Storage not ready yet:', error);
         }
     }, []);
+
+    // Safe function to sync content that checks connection first
+    const syncContentToStorage = useCallback((content: string) => {
+        if (!room || room.getConnectionState() !== 'open') {
+            console.log('Room not connected, skipping storage sync');
+            return;
+        }
+        
+        try {
+            syncContentToStorageMutation(content);
+        } catch (error) {
+            console.log('Failed to sync content to storage:', error);
+        }
+    }, [room, syncContentToStorageMutation]);
 
     // Memoize user data to prevent unnecessary re-renders
     const userData = useMemo(() => ({
@@ -95,12 +109,10 @@ export function CollaborativeEditor({ document, initialContent }: CollaborativeE
             // Clear typing indicator after 2 seconds of inactivity
             debouncedStopTyping();
             
-            // Sync content to Liveblocks storage for mind map (only if room is connected)
-            if (room && room.getConnectionState() === 'open') {
-                const content = editor.getText();
-                if (content && content.trim().length > 0) {
-                    syncContentToStorage(content);
-                }
+            // Sync content to Liveblocks storage for mind map
+            const content = editor.getText();
+            if (content && content.trim().length > 0) {
+                syncContentToStorage(content);
             }
         },
         extensions: provider
@@ -140,7 +152,7 @@ export function CollaborativeEditor({ document, initialContent }: CollaborativeE
                   Link.configure({
                       openOnClick: false,
                       HTMLAttributes: {
-                          class: 'text-blue-500 underline cursor-pointer',
+                          class: 'text-gray-500 underline cursor-pointer',
                       },
                   }),
                   Image.configure({
@@ -190,7 +202,7 @@ export function CollaborativeEditor({ document, initialContent }: CollaborativeE
                   Link.configure({
                       openOnClick: false,
                       HTMLAttributes: {
-                          class: 'text-blue-500 underline cursor-pointer',
+                          class: 'text-gray-500 underline cursor-pointer',
                       },
                   }),
                   Image.configure({
@@ -217,10 +229,8 @@ export function CollaborativeEditor({ document, initialContent }: CollaborativeE
             editor.commands.setContent(initialContent);
             setHasSetInitialContent(true);
             
-            // Also sync to storage for mind map (only if room is connected)
-            if (room && room.getConnectionState() === 'open') {
-                syncContentToStorage(initialContent);
-            }
+            // Also sync to storage for mind map
+            syncContentToStorage(initialContent);
         }
     }, [editor, initialContent, syncContentToStorage, room, hasSetInitialContent]);
 

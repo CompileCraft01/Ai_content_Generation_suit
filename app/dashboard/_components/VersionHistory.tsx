@@ -109,7 +109,7 @@ function VersionHistory({ documentId, onVersionSelect, currentContent }: Props) 
               onClick={() => handleVersionClick(version)}
               className={`p-2 rounded cursor-pointer text-xs border transition-colors ${
                 version.version === currentVersion
-                  ? 'bg-blue-100 border-blue-300 text-blue-800'
+                  ? 'bg-gray-100 border-gray-300 text-gray-800'
                   : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
               }`}
             >
@@ -117,7 +117,7 @@ function VersionHistory({ documentId, onVersionSelect, currentContent }: Props) 
                 <FileText className="w-3 h-3" />
                 <span className="font-medium">Version {version.version}</span>
                 {version.version === currentVersion && (
-                  <span className="text-blue-600 text-xs">(Current)</span>
+                  <span className="text-gray-600 text-xs">(Current)</span>
                 )}
               </div>
               <div className="text-gray-600 mb-1">
@@ -135,7 +135,7 @@ function VersionHistory({ documentId, onVersionSelect, currentContent }: Props) 
       {currentContent && currentContent.trim() && (
         <button
           onClick={() => saveVersion(currentContent, 'Manual save')}
-          className="w-full mt-3 px-3 py-2 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
+          className="w-full mt-3 px-3 py-2 bg-gray-800 text-white text-xs rounded hover:bg-gray-700 transition-colors"
         >
           Save Current as New Version
         </button>

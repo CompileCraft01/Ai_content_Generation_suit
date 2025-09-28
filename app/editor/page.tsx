@@ -1,7 +1,6 @@
 'use client';
 
 import { RoomProvider } from '@/liveblocks.config';
-import { LiveObject } from '@liveblocks/client';
 import { CollaborativeEditor } from '@/components/CollaborativeEditor';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
@@ -53,31 +52,7 @@ export default function EditorPage() {
             </div>
             
             <div className="p-6">
-              <RoomProvider 
-                id={roomId} 
-                initialPresence={{ cursor: null, isTyping: false }}
-                initialStorage={{ 
-                  content: "Start typing to test collaborative editing...",
-                  mindMap: new LiveObject({
-                    root: {
-                      id: 'root',
-                      text: 'Central Topic',
-                      children: [
-                        {
-                          id: 'child1',
-                          text: 'Branch 1',
-                          children: []
-                        },
-                        {
-                          id: 'child2',
-                          text: 'Branch 2',
-                          children: []
-                        }
-                      ]
-                    }
-                  })
-                }}
-              >
+              <RoomProvider id={roomId} initialPresence={{ cursor: null }}>
                 <CollaborativeEditor document={document} initialContent="Start typing to test collaborative editing..." />
               </RoomProvider>
             </div>

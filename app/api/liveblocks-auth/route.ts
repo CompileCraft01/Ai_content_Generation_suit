@@ -9,8 +9,8 @@ const liveblocks = new Liveblocks({
 // Generate consistent color based on user ID
 function getUserColor(userId: string): string {
   const colors = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
+    '#FF6B6B', '#6B7280', '#374151', '#96CEB4', '#FFEAA7',
+    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#4B5563'
   ];
   let hash = 0;
   for (let i = 0; i < userId.length; i++) {

@@ -23,7 +23,8 @@ import {
   CheckSquare,
   Square,
   Subscript,
-  Superscript
+  Superscript,
+  Download
 } from 'lucide-react';
 
 interface RichTextToolbarProps {
@@ -34,6 +35,38 @@ const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
   if (!editor) {
     return null;
   }
+
+  const handleDownload = () => {
+    // Get the text content from the editor
+    const textContent = editor.getText();
+    
+    if (!textContent.trim()) {
+      alert('No content to download. Please add some text first.');
+      return;
+    }
+
+    // Create a blob with the text content
+    const blob = new Blob([textContent], { type: 'text/plain' });
+    
+    // Create a download link
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Generate filename with current date
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS format
+    link.download = `content-${dateStr}-${timeStr}.txt`;
+    
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up the URL object
+    window.URL.revokeObjectURL(url);
+  };
 
   const ToolbarButton: React.FC<{
     onClick: () => void;
@@ -48,7 +81,7 @@ const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
       title={title}
       className={`p-2 rounded-md transition-colors ${
         isActive
-          ? 'bg-blue-600 text-white'
+          ? 'bg-gray-800 text-white'
           : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
@@ -312,6 +345,18 @@ const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ editor }) => {
           title="Redo"
         >
           <span className="text-sm font-bold">↷</span>
+        </ToolbarButton>
+      </div>
+
+      <Separator />
+
+      {/* Download */}
+      <div className="flex items-center gap-1">
+        <ToolbarButton
+          onClick={handleDownload}
+          title="Download as TXT file"
+        >
+          <Download className="w-4 h-4" />
         </ToolbarButton>
       </div>
     </div>

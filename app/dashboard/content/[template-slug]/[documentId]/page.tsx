@@ -40,7 +40,7 @@ function ActiveCollaborators() {
                             />
                         ) : (
                             <div 
-                                className="w-8 h-8 rounded-full border-2 border-white bg-blue-500 flex items-center justify-center text-white text-xs font-semibold"
+                                className="w-8 h-8 rounded-full border-2 border-white bg-gray-800 flex items-center justify-center text-white text-xs font-semibold"
                                 title={userName}
                             >
                                 {userName.charAt(0).toUpperCase()}
@@ -135,16 +135,23 @@ function CreateNewContent(props:PROPS) {
     // Load previously saved content
     useEffect(()=>{
         const load = async()=>{
-            const res:any = await db.query.AIOutput.findFirst({
-                where: (row:any, { eq }:any) => eq(row.documentId, props.params.documentId),
-                orderBy: (row:any, { desc }:any) => desc(row.id)
-            });
-            if(res?.aiResponse){
-                setAiOutput(res.aiResponse);
-                setInitialContent(res.aiResponse);
+            try {
+                const res:any = await db.query.AIOutput.findFirst({
+                    where: (row:any, { eq }:any) => eq(row.documentId, props.params.documentId),
+                    orderBy: (row:any, { desc }:any) => desc(row.id)
+                });
+                if(res?.aiResponse){
+                    setAiOutput(res.aiResponse);
+                    setInitialContent(res.aiResponse);
+                    console.log('Loaded existing content from database');
+                }
+                // Always show the form
+                setShowForm(true);
+            } catch (error) {
+                console.error('Error loading content from database:', error);
+                // Still show the form even if loading fails
+                setShowForm(true);
             }
-            // Always show the form
-            setShowForm(true);
         };
         load();
     },[props.params.documentId])
@@ -206,7 +213,7 @@ function CreateNewContent(props:PROPS) {
                                     onClick={() => setActiveView('editor')}
                                     className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                                         activeView === 'editor'
-                                            ? 'bg-blue-600 text-white'
+                                            ? 'bg-gray-800 text-white'
                                             : 'text-gray-300 hover:text-white'
                                     }`}
                                 >
@@ -216,7 +223,7 @@ function CreateNewContent(props:PROPS) {
                                     onClick={() => setActiveView('mindmap')}
                                     className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                                         activeView === 'mindmap'
-                                            ? 'bg-blue-600 text-white'
+                                            ? 'bg-gray-800 text-white'
                                             : 'text-gray-300 hover:text-white'
                                     }`}
                                 >

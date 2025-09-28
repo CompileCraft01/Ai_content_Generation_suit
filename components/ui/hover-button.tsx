@@ -96,8 +96,8 @@ const HoverButton = React.forwardRef<HTMLButtonElement, HoverButtonProps>(
         className={cn(
           "relative isolate px-8 py-3 rounded-3xl",
           "text-white font-medium text-base leading-6",
-          "backdrop-blur-lg bg-gradient-to-tl from-blue-600 to-violet-600",
-          "hover:from-violet-600 hover:to-blue-600",
+          "backdrop-blur-lg bg-gradient-to-tl from-gray-800 to-violet-600",
+          "hover:from-violet-600 hover:to-gray-700",
           "cursor-pointer overflow-hidden transition-all duration-300 hover:scale-105",
           "before:content-[''] before:absolute before:inset-0",
           "before:rounded-[inherit] before:pointer-events-none",
@@ -114,8 +114,8 @@ const HoverButton = React.forwardRef<HTMLButtonElement, HoverButtonProps>(
         onClick={handleClick}
         {...props}
         style={{
-          "--circle-start": "#a0d9f8",
-          "--circle-end": "#3a5bbf",
+          "--circle-start": "#374151",
+          "--circle-end": "#1f2937",
         } as React.CSSProperties}
       >
         {circles.map(({ id, x, y, color, fadeState }) => (

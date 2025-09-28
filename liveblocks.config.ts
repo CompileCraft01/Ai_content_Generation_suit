@@ -26,6 +26,10 @@ type Storage = {
   mindMap: LiveObject<{
     root: MindMapNode;
   }>;
+  // Track if content has been initialized to prevent duplicates
+  contentInitialized: LiveObject<{
+    initialized: boolean;
+  }>;
 };
 
 

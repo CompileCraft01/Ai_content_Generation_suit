@@ -1,21 +1,6 @@
 "use client";
 
 import React, { useState, useCallback, useEffect } from 'react';
-import ReactFlow, {
-  Node,
-  Edge,
-  addEdge,
-  Connection,
-  useNodesState,
-  useEdgesState,
-  Controls,
-  Background,
-  BackgroundVariant,
-  NodeTypes,
-  ReactFlowProvider,
-  MarkerType,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
 import { useStorage, useMutation, useOthers, useMyPresence } from '@/liveblocks.config';
 import { generateMindMapFromContent, MindMapNode } from '@/lib/contentAnalyzer';
 
@@ -75,7 +60,7 @@ const EditableNode = ({ data, id }: { data: any; id: string }) => {
       case 0: // Root node
         return "px-6 py-4 shadow-xl rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-500 border-4 border-yellow-600 min-w-[150px] hover:scale-105 transition-all duration-200";
       case 1: // Main topics
-        return "px-4 py-3 shadow-lg rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 border-3 border-blue-700 min-w-[130px] hover:scale-105 transition-all duration-200";
+        return "px-4 py-3 shadow-lg rounded-lg bg-gradient-to-br from-gray-700 to-gray-800 border-3 border-gray-600 min-w-[130px] hover:scale-105 transition-all duration-200";
       default: // Subtopics and details
         return "px-3 py-2 shadow-md rounded-lg bg-gradient-to-br from-green-500 to-green-600 border-2 border-green-700 min-w-[120px] hover:scale-105 transition-all duration-200";
     }
@@ -125,18 +110,13 @@ const EditableNode = ({ data, id }: { data: any; id: string }) => {
   );
 };
 
-const nodeTypes: NodeTypes = {
-  editable: EditableNode,
-};
-
-// Convert mind map data to ReactFlow nodes and edges
-const convertToReactFlowData = (mindMapData: any): { nodes: Node[]; edges: Edge[] } => {
+// Convert mind map data to simple node structure
+const convertToSimpleNodes = (mindMapData: any): any[] => {
   if (!mindMapData || !mindMapData.root) {
-    return { nodes: [], edges: [] };
+    return [];
   }
 
-  const nodes: Node[] = [];
-  const edges: Edge[] = [];
+  const nodes: any[] = [];
   let nodeId = 0;
 
   // First pass: collect all nodes with their relationships
@@ -158,7 +138,7 @@ const convertToReactFlowData = (mindMapData: any): { nodes: Node[]; edges: Edge[
     }
   };
 
-  // Second pass: position nodes and create edges
+  // Second pass: position nodes in a simple grid layout
   const positionNodes = (): void => {
     const rootNode = nodeMap.get('root');
     if (!rootNode) return;
@@ -196,26 +176,6 @@ const convertToReactFlowData = (mindMapData: any): { nodes: Node[]; edges: Edge[
           type: 'subtopic'
         },
       });
-
-      // Create edge from root to level 1
-      edges.push({
-        id: `edge-root-${node.id}`,
-        source: 'root',
-        target: node.id,
-        type: 'smoothstep',
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: '#3b82f6',
-          width: 35,
-          height: 35,
-        },
-        style: {
-          stroke: '#3b82f6',
-          strokeWidth: 4,
-          strokeDasharray: '0',
-        },
-        animated: true,
-      });
     });
 
     // Position level 2+ nodes around their parents
@@ -243,25 +203,6 @@ const convertToReactFlowData = (mindMapData: any): { nodes: Node[]; edges: Edge[
             type: 'detail'
           },
         });
-
-        // Create edge from parent to child
-        edges.push({
-          id: `edge-${node.parentId}-${node.id}`,
-          source: node.parentId,
-          target: node.id,
-          type: 'smoothstep',
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: '#10b981',
-            width: 25,
-            height: 25,
-          },
-          style: {
-            stroke: '#10b981',
-            strokeWidth: 3,
-            strokeDasharray: '8,4',
-          },
-        });
       }
     });
   };
@@ -270,7 +211,7 @@ const convertToReactFlowData = (mindMapData: any): { nodes: Node[]; edges: Edge[
   collectNodes(mindMapData.root);
   positionNodes();
 
-  return { nodes, edges };
+  return nodes;
 };
 
 interface CollaborativeMindMapProps {
@@ -283,8 +224,7 @@ const CollaborativeMindMap: React.FC<CollaborativeMindMapProps> = ({ content, in
   const textContent = useStorage((root) => root.content);
   const [myPresence, updateMyPresence] = useMyPresence();
   const others = useOthers();
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes] = useState<any[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [lastContentHash, setLastContentHash] = useState<string>('');
@@ -403,14 +343,32 @@ const CollaborativeMindMap: React.FC<CollaborativeMindMapProps> = ({ content, in
     }
   }, [mindMapData, isInitialized, initializeMindMap, generateMindMapFromText, textContent, content, initialMindMap]);
 
-  // Update ReactFlow data when mind map data changes
+  // Update nodes when mind map data changes
   useEffect(() => {
     if (mindMapData && isInitialized) {
-      const { nodes: newNodes, edges: newEdges } = convertToReactFlowData(mindMapData);
+      const newNodes = convertToSimpleNodes(mindMapData);
+      console.log('Setting nodes:', newNodes.length);
       setNodes(newNodes);
-      setEdges(newEdges);
+      
+      // Fallback: If no nodes, create a default structure
+      if (newNodes.length === 0) {
+        console.log('No nodes found, creating default structure');
+        const defaultNodes = [
+          {
+            id: 'default-root',
+            type: 'editable',
+            position: { x: 400, y: 200 },
+            data: { 
+              label: 'Central Topic',
+              level: 0,
+              type: 'main'
+            },
+          }
+        ];
+        setNodes(defaultNodes);
+      }
     }
-  }, [mindMapData, setNodes, setEdges, isInitialized]);
+  }, [mindMapData, setNodes, isInitialized]);
 
   // Simple hash function to detect content changes
   const getContentHash = (content: string): string => {
@@ -442,50 +400,13 @@ const CollaborativeMindMap: React.FC<CollaborativeMindMapProps> = ({ content, in
     }
   }, [textContent, isInitialized, mindMapData, generateMindMapFromText, lastContentHash]);
 
-  const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge({
-      ...params,
-      type: 'smoothstep', // Smooth curved lines for better visual flow
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: '#10b981',
-        width: 30,
-        height: 30,
-      },
-      style: {
-        stroke: '#10b981',
-        strokeWidth: 3,
-        strokeDasharray: '8,4', // Dashed line for manually added connections
-      },
-      animated: true, // Animate manually added connections
-    }, eds)),
-    [setEdges]
-  );
-
-  const onNodeDoubleClick = useCallback((event: React.MouseEvent, node: Node) => {
+  const onNodeDoubleClick = useCallback((event: React.MouseEvent, node: any) => {
     // Update presence when user interacts with mind map
     updateMyPresence({ isTyping: true });
     // The double-click handling is done in the EditableNode component
   }, [updateMyPresence]);
 
-  const onPaneMouseMove = useCallback((event: React.MouseEvent) => {
-    // Update cursor position for other users
-    updateMyPresence({
-      cursor: {
-        x: event.clientX,
-        y: event.clientY,
-      },
-    });
-  }, [updateMyPresence]);
-
-  const onPaneMouseLeave = useCallback(() => {
-    // Clear cursor when mouse leaves the pane
-    updateMyPresence({
-      cursor: null,
-    });
-  }, [updateMyPresence]);
-
-  const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
+  const onNodeContextMenu = useCallback((event: React.MouseEvent, node: any) => {
     event.preventDefault();
     const newNodeText = prompt('Enter text for new child node:');
     if (newNodeText) {
@@ -497,8 +418,9 @@ const CollaborativeMindMap: React.FC<CollaborativeMindMapProps> = ({ content, in
     return (
       <div className="w-full h-[600px] bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Initializing collaborative mind map...</p>
+          <p className="text-xs text-gray-500 mt-2">Loading mind map data...</p>
         </div>
       </div>
     );
@@ -512,24 +434,34 @@ const CollaborativeMindMap: React.FC<CollaborativeMindMapProps> = ({ content, in
     }
   };
 
+  // Debug logging
+  console.log('Mind map render - isInitialized:', isInitialized);
+  console.log('Mind map render - mindMapData:', mindMapData);
+  console.log('Mind map render - nodes:', nodes);
+
   return (
-    <div className="w-full h-[600px] bg-gray-50 relative">
+    <div className="w-full h-[600px] bg-gray-50 relative overflow-auto">
       <div className="absolute top-2 left-2 z-10 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 text-xs text-gray-600 shadow-sm">
         💡 Double-click nodes to edit • Right-click to add children • Drag to move
+        <br />
+        <span className="text-gray-600">Nodes: {nodes.length}</span>
       </div>
       <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
         {/* Active Collaborators */}
         {others.length > 0 && (
           <div className="flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1 shadow-sm border">
             <div className="flex -space-x-1">
-              {others.slice(0, 3).map(({ connectionId, info }) => (
+              {others.slice(0, 3).map(({ connectionId, info, presence }) => (
                 <div
                   key={connectionId}
-                  className="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-xs font-medium text-white"
+                  className="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-xs font-medium text-white relative"
                   style={{ backgroundColor: info?.color || '#f783ac' }}
-                  title={info?.name || 'Anonymous'}
+                  title={`${info?.name || 'Anonymous'} ${presence?.isTyping ? '(typing...)' : ''}`}
                 >
                   {(info?.name || 'A').charAt(0).toUpperCase()}
+                  {presence?.isTyping && (
+                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  )}
                 </div>
               ))}
               {others.length > 3 && (
@@ -541,56 +473,49 @@ const CollaborativeMindMap: React.FC<CollaborativeMindMapProps> = ({ content, in
             <span className="text-xs text-gray-600 ml-1">
               {others.length} collaborator{others.length !== 1 ? 's' : ''}
             </span>
+            {/* Typing indicator for mind map */}
+            {others.some(({ presence }) => presence?.isTyping) && (
+              <div className="text-xs text-green-600 ml-2">
+                {others.filter(({ presence }) => presence?.isTyping).map(({ info }) => info?.name || 'Someone').join(', ')} typing...
+              </div>
+            )}
           </div>
         )}
         
         {isRegenerating && (
-          <div className="flex items-center gap-1 text-xs text-blue-600">
-            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+          <div className="flex items-center gap-1 text-xs text-gray-600">
+            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600"></div>
             Updating...
           </div>
         )}
         <button
           onClick={handleRegenerateFromContent}
           disabled={isRegenerating}
-          className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-3 py-1 rounded-md text-xs font-medium transition-colors"
+          className="bg-gray-800 hover:bg-gray-700 disabled:bg-gray-400 text-white px-3 py-1 rounded-md text-xs font-medium transition-colors"
           title="Regenerate mind map from text content"
         >
           🔄 Sync from Text
         </button>
       </div>
-      <ReactFlowProvider>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onNodeDoubleClick={onNodeDoubleClick}
-          onNodeContextMenu={onNodeContextMenu}
-          onPaneMouseMove={onPaneMouseMove}
-          onPaneMouseLeave={onPaneMouseLeave}
-          nodeTypes={nodeTypes}
-          fitView
-          className="bg-gray-50"
-          defaultEdgeOptions={{
-            type: 'smoothstep',
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              color: '#10b981',
-              width: 30,
-              height: 30,
-            },
-            style: {
-              stroke: '#10b981',
-              strokeWidth: 3,
-            },
-          }}
-        >
-          <Controls />
-          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-        </ReactFlow>
-      </ReactFlowProvider>
+      
+      {/* Simple mind map visualization */}
+      <div className="relative w-full h-full p-8">
+        {nodes.map((node) => (
+          <div
+            key={node.id}
+            className="absolute"
+            style={{
+              left: node.position.x,
+              top: node.position.y,
+              transform: 'translate(-50%, -50%)'
+            }}
+            onDoubleClick={(e) => onNodeDoubleClick(e, node)}
+            onContextMenu={(e) => onNodeContextMenu(e, node)}
+          >
+            <EditableNode data={node.data} id={node.id} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

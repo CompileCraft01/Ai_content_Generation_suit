@@ -14,6 +14,15 @@ const DocumentContext = createContext<{
   setDocumentInfo: () => {}
 });
 
+// Create context for search functionality
+const SearchContext = createContext<{
+  searchInput: string;
+  setSearchInput: (value: string) => void;
+}>({
+  searchInput: '',
+  setSearchInput: () => {}
+});
+
 function layout({
     children,
   }: Readonly<{
@@ -28,26 +37,32 @@ function layout({
       onVersionSelect?: (content: string, version: number) => void;
     }>({});
 
+    // Search context state
+    const [searchInput, setSearchInput] = useState<string>('');
+
   return (
     <DocumentContext.Provider value={{...documentInfo, setDocumentInfo}}>
-      {/* Wrap the entire dashboard in the LiveblocksProvider */}
-      <LiveblocksProvider>
-        <div className='bg-slate-900 min-h-screen'>
-            <div className='md:w-64 hidden md:block fixed'>
-                <SideNav 
-                  documentId={documentInfo.documentId}
-                  currentContent={documentInfo.currentContent}
-                  onVersionSelect={documentInfo.onVersionSelect}
-                />
-            </div>
-            <div className='md:ml-64'>
-              <Header/>
-            {children}
-            </div>
-        </div>
-      </LiveblocksProvider>
+      <SearchContext.Provider value={{ searchInput, setSearchInput }}>
+        {/* Wrap the entire dashboard in the LiveblocksProvider */}
+        <LiveblocksProvider>
+          <div className='bg-slate-900 min-h-screen'>
+              <div className='md:w-64 hidden md:block fixed'>
+                  <SideNav 
+                    documentId={documentInfo.documentId}
+                    currentContent={documentInfo.currentContent}
+                    onVersionSelect={documentInfo.onVersionSelect}
+                  />
+              </div>
+              <div className='md:ml-64'>
+                <Header onSearchInput={setSearchInput}/>
+              {children}
+              </div>
+          </div>
+        </LiveblocksProvider>
+      </SearchContext.Provider>
     </DocumentContext.Provider>
   )
 }
 
+export { SearchContext };
 export default layout

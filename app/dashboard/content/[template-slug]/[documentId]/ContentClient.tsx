@@ -189,7 +189,7 @@ export default function ContentClient({ params, initialContent }: Props) {
                                 onClick={() => setActiveView('editor')}
                                 className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                                     activeView === 'editor'
-                                        ? 'bg-blue-600 text-white'
+                                        ? 'bg-gray-800 text-white'
                                         : 'text-gray-600 hover:text-gray-800'
                                 }`}
                             >
@@ -199,7 +199,7 @@ export default function ContentClient({ params, initialContent }: Props) {
                                 onClick={() => setActiveView('mindmap')}
                                 className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                                     activeView === 'mindmap'
-                                        ? 'bg-blue-600 text-white'
+                                        ? 'bg-gray-800 text-white'
                                         : 'text-gray-600 hover:text-gray-800'
                                 }`}
                             >
