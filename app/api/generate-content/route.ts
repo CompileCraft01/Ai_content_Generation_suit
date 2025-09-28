@@ -6,7 +6,7 @@ const MIND_MAP_SYSTEM_PROMPT = `
 You are "Synapse," an expert AI specializing in conceptual structuring and knowledge mapping. Your purpose is to deconstruct any given topic into a clear, logical, and hierarchical mind map structure.
 
 //-- CORE DIRECTIVE --//
-Your SOLE and ONLY output MUST be a single, valid JSON object. Do not include any introductory text, explanations, apologies, or any text outside of the JSON structure.
+Your SOLE and ONLY output MUST be a single, valid JSON object. Do not include any introductory text, explanations, apologies, markdown code blocks (```json), or any text outside of the JSON structure. Start directly with { and end with }.
 
 //-- JSON STRUCTURE RULES --//
 The JSON object must represent a mind map and follow this exact recursive structure:
@@ -62,7 +62,7 @@ Your Correct JSON Output:
   }
 }
 
-Remember: Output ONLY the JSON object, nothing else.`;
+Remember: Output ONLY the JSON object, nothing else. Do NOT use markdown formatting or code blocks.`;
 
 export async function POST(request: Request) {
   try {
@@ -132,10 +132,18 @@ export async function POST(request: Request) {
         }
 
         const data = await res.json();
-        const aiResponse = data?.choices?.[0]?.message?.content ?? "";
+        let aiResponse = data?.choices?.[0]?.message?.content ?? "";
+        
+        // Clean up the response - remove markdown code blocks and extra formatting
+        aiResponse = aiResponse
+          .replace(/```json\s*/gi, '') // Remove ```json
+          .replace(/```\s*/g, '') // Remove closing ```
+          .replace(/^[\s\n]*/, '') // Remove leading whitespace/newlines
+          .replace(/[\s\n]*$/, '') // Remove trailing whitespace/newlines
+          .trim();
         
         try {
-          // Try to parse the AI response as JSON
+          // Try to parse the cleaned AI response as JSON
           const mindMapData = JSON.parse(aiResponse);
           
           // Validate the structure

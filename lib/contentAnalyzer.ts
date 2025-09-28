@@ -16,6 +16,22 @@ export interface ContentAnalysis {
 }
 
 /**
+ * Strips HTML tags from content
+ */
+function stripHtmlTags(content: string): string {
+  return content
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
+    .replace(/&amp;/g, '&') // Replace &amp; with &
+    .replace(/&lt;/g, '<') // Replace &lt; with <
+    .replace(/&gt;/g, '>') // Replace &gt; with >
+    .replace(/&quot;/g, '"') // Replace &quot; with "
+    .replace(/&#39;/g, "'") // Replace &#39; with '
+    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+    .trim();
+}
+
+/**
  * Analyzes text content and extracts key information for mind map generation
  */
 export function analyzeContent(content: string): ContentAnalysis {
@@ -28,8 +44,8 @@ export function analyzeContent(content: string): ContentAnalysis {
     };
   }
 
-  // Clean and normalize content
-  const cleanContent = content.trim();
+  // Clean and normalize content - strip HTML first
+  const cleanContent = stripHtmlTags(content).trim();
   
   // Extract main topic (first line or first sentence)
   const lines = cleanContent.split('\n').filter(line => line.trim().length > 0);
@@ -79,10 +95,10 @@ export function generateMindMapFromContent(content: string): MindMapNode {
 
     // Add details as children of subtopics
     const subtopicDetails = analysis.details[subtopic] || [];
-    subtopicDetails.forEach((detail, detailIndex) => {
+    subtopicDetails.slice(0, 3).forEach((detail, detailIndex) => { // Limit to 3 details per subtopic
       const detailNode: MindMapNode = {
         id: `detail-${index}-${detailIndex}`,
-        text: detail,
+        text: detail.length > 60 ? detail.substring(0, 60) + '...' : detail,
         level: 2,
         type: 'detail',
         children: []
@@ -93,9 +109,48 @@ export function generateMindMapFromContent(content: string): MindMapNode {
     rootNode.children.push(subtopicNode);
   });
 
-  // If no subtopics found, create a basic structure
+  // If no subtopics found, create a more comprehensive structure from content
   if (rootNode.children.length === 0) {
-    const contentPreview = content.length > 100 ? content.substring(0, 100) + '...' : content;
+    console.log('No subtopics found, creating structure from content paragraphs');
+    const cleanContent = stripHtmlTags(content);
+    const paragraphs = cleanContent.split('\n\n').filter(p => p.trim().length > 30);
+    
+    paragraphs.slice(0, 6).forEach((paragraph, index) => {
+      const sentences = paragraph.split(/[.!?]+/).filter(s => s.trim().length > 10);
+      const mainSentence = sentences[0]?.trim();
+      
+      if (mainSentence && mainSentence.length > 10) {
+        const topicNode: MindMapNode = {
+          id: `topic-${index}`,
+          text: mainSentence.length > 50 ? mainSentence.substring(0, 50) + '...' : mainSentence,
+          level: 1,
+          type: 'subtopic',
+          children: []
+        };
+        
+        // Add additional sentences as details
+        sentences.slice(1, 3).forEach((sentence, sentIndex) => {
+          const cleanSentence = sentence.trim();
+          if (cleanSentence.length > 10) {
+            topicNode.children.push({
+              id: `detail-${index}-${sentIndex}`,
+              text: cleanSentence.length > 60 ? cleanSentence.substring(0, 60) + '...' : cleanSentence,
+              level: 2,
+              type: 'detail',
+              children: []
+            });
+          }
+        });
+        
+        rootNode.children.push(topicNode);
+      }
+    });
+  }
+
+  // Final fallback if still no children
+  if (rootNode.children.length === 0) {
+    const contentPreview = stripHtmlTags(content);
+    const words = contentPreview.split(' ').slice(0, 15).join(' ');
     rootNode.children.push({
       id: 'content-preview',
       text: 'Content Overview',
@@ -103,7 +158,7 @@ export function generateMindMapFromContent(content: string): MindMapNode {
       type: 'subtopic',
       children: [{
         id: 'preview-detail',
-        text: contentPreview,
+        text: words + (contentPreview.split(' ').length > 15 ? '...' : ''),
         level: 2,
         type: 'detail',
         children: []
@@ -111,6 +166,7 @@ export function generateMindMapFromContent(content: string): MindMapNode {
     });
   }
 
+  console.log('Generated mind map structure:', rootNode);
   return rootNode;
 }
 
@@ -118,9 +174,12 @@ export function generateMindMapFromContent(content: string): MindMapNode {
  * Extracts the main topic from content
  */
 function extractMainTopic(firstLine: string, fullContent: string): string {
+  const cleanContent = stripHtmlTags(fullContent);
+  const cleanFirstLine = stripHtmlTags(firstLine);
+  
   // If first line is short and looks like a title, use it
-  if (firstLine.length < 100 && !firstLine.includes('.')) {
-    return firstLine.trim();
+  if (cleanFirstLine.length < 120 && !cleanFirstLine.includes('.') && cleanFirstLine.length > 5) {
+    return cleanFirstLine.trim();
   }
 
   // Look for common title patterns
@@ -128,76 +187,179 @@ function extractMainTopic(firstLine: string, fullContent: string): string {
     /^#\s*(.+)/, // Markdown heading
     /^(.+?):\s*$/, // Title with colon
     /^(.+?)\n\n/, // Title followed by double newline
+    /^(.+?)\s*-\s*/, // Title followed by dash
   ];
 
   for (const pattern of titlePatterns) {
-    const match = fullContent.match(pattern);
-    if (match && match[1].length < 100) {
+    const match = cleanContent.match(pattern);
+    if (match && match[1].length < 120 && match[1].length > 5) {
+      return stripHtmlTags(match[1]).trim();
+    }
+  }
+
+  // Look for blog-style titles (common patterns)
+  const blogPatterns = [
+    /^(.+?(?:guide|tips|ideas|ways|steps|methods|strategies|secrets|ultimate|complete|best|top|how to).+?)(?:\.|$)/i,
+    /^(how to .+?)(?:\.|$)/i,
+    /^(\d+.+?(?:tips|ideas|ways|steps|methods|strategies).+?)(?:\.|$)/i,
+  ];
+
+  for (const pattern of blogPatterns) {
+    const match = cleanContent.match(pattern);
+    if (match && match[1].length < 120 && match[1].length > 10) {
       return match[1].trim();
     }
   }
 
   // Extract first sentence if it's reasonable length
-  const firstSentence = firstLine.split('.')[0];
-  if (firstSentence.length < 80 && firstSentence.length > 10) {
-    return firstSentence.trim();
+  const sentences = cleanContent.split(/[.!?]+/);
+  const firstSentence = sentences[0]?.trim();
+  if (firstSentence && firstSentence.length < 100 && firstSentence.length > 10) {
+    return firstSentence;
   }
 
   // Fallback to truncated first line
-  return firstLine.length > 50 ? firstLine.substring(0, 50) + '...' : firstLine;
+  const fallback = cleanFirstLine.length > 60 ? cleanFirstLine.substring(0, 60) + '...' : cleanFirstLine;
+  return fallback || 'Content Topic';
 }
 
 /**
- * Extracts subtopics from content
+ * Extracts subtopics from content with improved criteria
  */
 function extractSubtopics(content: string): string[] {
   const subtopics: string[] = [];
   
-  // Extract from markdown headings
-  const headingMatches = content.match(/^#{2,}\s*(.+)$/gm);
+  // Strip HTML first
+  const cleanContent = stripHtmlTags(content);
+  
+  // 1. Extract from markdown headings (highest priority)
+  const headingMatches = cleanContent.match(/^#{1,4}\s+(.+)$/gm);
   if (headingMatches) {
     headingMatches.forEach(match => {
-      const heading = match.replace(/^#+\s*/, '').trim();
-      if (heading.length > 0 && heading.length < 100) {
+      const heading = match.replace(/^#+\s+/, '').trim();
+      if (heading.length > 5 && heading.length < 120) {
         subtopics.push(heading);
       }
     });
   }
 
-  // Extract from bullet points
-  const bulletMatches = content.match(/^[\*\-\+]\s*(.+)$/gm);
-  if (bulletMatches) {
-    bulletMatches.forEach(match => {
-      const bullet = match.replace(/^[\*\-\+]\s*/, '').trim();
-      if (bullet.length > 0 && bullet.length < 100) {
-        subtopics.push(bullet);
+  // 2. Extract from bullet points and numbered lists (high priority)
+  const listPatterns = [
+    /^[\s]*[-*•]\s+(.+)$/gm,  // Bullet points
+    /^[\s]*\d+\.\s+(.+)$/gm,  // Numbered lists
+    /^[\s]*[a-zA-Z]\.\s+(.+)$/gm  // Lettered lists
+  ];
+  
+  listPatterns.forEach(pattern => {
+    const matches = cleanContent.match(pattern);
+    if (matches) {
+      matches.forEach(match => {
+        const item = match.replace(/^[\s]*[-*•\d+a-zA-Z\.\s]+/, '').trim();
+        if (item.length > 8 && item.length < 120) {
+          subtopics.push(item);
+        }
+      });
+    }
+  });
+
+  // 3. Extract structured content patterns (medium priority)
+  const structurePatterns = [
+    // Sequential indicators
+    /(?:first[ly]?|1st|initially)[,:]\s*(.{15,100})/gi,
+    /(?:second[ly]?|2nd|then|next)[,:]\s*(.{15,100})/gi,
+    /(?:third[ly]?|3rd|finally|lastly)[,:]\s*(.{15,100})/gi,
+    /(?:fourth[ly]?|4th)[,:]\s*(.{15,100})/gi,
+    
+    // Topic indicators
+    /(?:another|a|one)\s+(?:key|main|important|crucial|essential)\s+(?:aspect|point|factor|element|consideration)\s+(?:is|includes?|involves?)\s+(.{15,100})/gi,
+    /(?:the\s+)?(?:key|main|primary|central|core)\s+(?:aspect|point|factor|element|idea|concept)\s+(?:is|of|includes?)\s+(.{15,100})/gi,
+    
+    // Benefits/advantages patterns
+    /(?:benefits?|advantages?)\s+(?:include|are|of)\s+(.{15,100})/gi,
+    /(?:this|it)\s+(?:helps?|allows?|enables?|provides?)\s+(.{15,100})/gi,
+    
+    // Problem/challenge patterns
+    /(?:challenges?|problems?|issues?|difficulties)\s+(?:include|are|with)\s+(.{15,100})/gi,
+    
+    // Feature/characteristic patterns
+    /(?:features?|characteristics?|properties?)\s+(?:include|are|of)\s+(.{15,100})/gi,
+  ];
+  
+  structurePatterns.forEach(pattern => {
+    const matches = cleanContent.matchAll(pattern);
+    for (const match of matches) {
+      if (match[1]) {
+        const topic = match[1].trim().replace(/[.!?]+$/, ''); // Remove trailing punctuation
+        if (topic.length > 10 && topic.length < 120) {
+          subtopics.push(topic);
+        }
+      }
+    }
+  });
+
+  // 4. Extract from strong topic sentences (lower priority)
+  const sentences = cleanContent.split(/[.!?]+/).filter(s => s.trim().length > 25);
+  const topicSentencePatterns = [
+    /^(.{20,80})\s+(?:is|are|can|will|should|must|may)\s+/i,
+    /^(?:understanding|knowing|learning)\s+(.{20,80})\s+/i,
+    /^(.{20,80})\s+(?:helps?|allows?|enables?|provides?)\s+/i,
+  ];
+  
+  sentences.slice(0, 10).forEach(sentence => {
+    topicSentencePatterns.forEach(pattern => {
+      const match = sentence.trim().match(pattern);
+      if (match && match[1]) {
+        const topic = match[1].trim();
+        if (topic.length > 15 && topic.length < 100) {
+          subtopics.push(topic);
+        }
       }
     });
-  }
+  });
 
-  // Extract from numbered lists
-  const numberedMatches = content.match(/^\d+\.\s*(.+)$/gm);
-  if (numberedMatches) {
-    numberedMatches.forEach(match => {
-      const numbered = match.replace(/^\d+\.\s*/, '').trim();
-      if (numbered.length > 0 && numbered.length < 100) {
-        subtopics.push(numbered);
-      }
-    });
-  }
-
-  // Extract from paragraphs (if no other structure found)
-  if (subtopics.length === 0) {
-    const paragraphs = content.split('\n\n').filter(p => p.trim().length > 20);
-    paragraphs.slice(0, 5).forEach(paragraph => {
-      const firstSentence = paragraph.split('.')[0].trim();
-      if (firstSentence.length > 10 && firstSentence.length < 100) {
+  // 5. Extract from paragraph beginnings (fallback)
+  if (subtopics.length < 4) {
+    const paragraphs = cleanContent.split(/\n\s*\n/).filter(p => p.trim().length > 40);
+    paragraphs.slice(0, 8).forEach(paragraph => {
+      const sentences = paragraph.split(/[.!?]/);
+      const firstSentence = sentences[0]?.trim();
+      
+      if (firstSentence && firstSentence.length > 20 && firstSentence.length < 120) {
         subtopics.push(firstSentence);
       }
     });
   }
 
-  return subtopics.slice(0, 8); // Limit to 8 subtopics
+  // Clean, deduplicate, and prioritize
+  const cleanedSubtopics = subtopics
+    .map(topic => {
+      // Clean up the topic text
+      return topic
+        .replace(/[^\w\s\-'",.:]/g, '') // Keep basic punctuation
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
+    })
+    .filter(topic => {
+      // Filter criteria
+      return topic.length > 10 && 
+             topic.length < 150 && 
+             !topic.toLowerCase().includes('click here') &&
+             !topic.toLowerCase().includes('read more') &&
+             !/^\d+$/.test(topic) && // Not just numbers
+             topic.split(' ').length > 2; // At least 3 words
+    })
+    .filter((topic, index, array) => {
+      // Remove duplicates and very similar topics
+      return array.findIndex(t => {
+        const similarity = t.toLowerCase() === topic.toLowerCase() || 
+          (t.length > 20 && topic.length > 20 && 
+           t.toLowerCase().includes(topic.toLowerCase().substring(0, 20)));
+        return similarity;
+      }) === index;
+    })
+    .slice(0, 8); // Allow up to 8 subtopics for richer mind maps
+
+  return cleanedSubtopics;
 }
 
 /**

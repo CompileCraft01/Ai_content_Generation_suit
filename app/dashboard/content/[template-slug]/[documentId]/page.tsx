@@ -97,11 +97,21 @@ function CreateNewContent(props:PROPS) {
         const selectedTemplatePrompt=selectedTemplate?.aiPrompt;
         const userRequest = JSON.stringify(formData)+", "+selectedTemplatePrompt;
 
-        const systemPrompt = `You are "Creator AI," an expert content creation assistant. Your goal is to provide a helpful, well-structured response. Follow these formatting rules strictly: 1. Start with a brief, friendly introductory sentence. 2. Structure the main content with paragraphs and bullet points using newlines. 3. CRITICAL: The entire response must be plain text. Do not use any HTML or Markdown formatting.`;
+        const systemPrompt = `You are "Creator AI," an expert content creation assistant. Your goal is to provide high-quality, engaging content based on the user's request and template requirements. Follow these guidelines:
+
+1. Create content that matches the specific template requirements exactly
+2. Use proper HTML formatting when requested (h1, h2, p, ul, li, strong, em, etc.)
+3. Ensure content is well-structured, engaging, and valuable to readers
+4. Include specific details, examples, and actionable insights
+5. Write in a professional yet accessible tone
+6. Make content comprehensive and thorough
+7. Follow SEO best practices when applicable
+
+Important: Generate content exactly as requested by the template prompt. If HTML formatting is requested, use proper HTML tags. If plain text is requested, provide clean plain text without any formatting.`;
         const FinalAIPrompt = systemPrompt + userRequest;
         
         try {
-            const response = await fetch('/api/generate-content', {
+            const response = await fetch('/api/generate-template-content', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: FinalAIPrompt })
@@ -200,7 +210,8 @@ function CreateNewContent(props:PROPS) {
                             }
                         ]
                     }
-                })
+                }),
+                contentInitialized: new LiveObject({ initialized: false })
             }}
         >
             <div className='bg-slate-800 shadow-lg border border-slate-700 rounded-lg'>
@@ -242,7 +253,7 @@ function CreateNewContent(props:PROPS) {
                             initialContent={initialContent}
                         />
                     ) : (
-                        <CollaborativeMindMap content={initialContent} />
+                        <CollaborativeMindMap content={initialContent || aiOutput} />
                     )}
                 </div>
             </div>

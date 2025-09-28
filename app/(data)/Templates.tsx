@@ -21,27 +21,27 @@ export default  [
             }
         ]
     },
-    {
-        name: 'Blog Content',
-        desc: 'An AI tool that serves as your personal blog post title writer, generating catchy and viral-worthy titles in your chosen language.',
-        category: 'blog',
-        icon: '📄',
-        slug: 'blog-content-generation',
-        aiPrompt: 'Create a comprehensive, engaging, and expertly crafted blog post based on the topic and outline. Structure the content as follows: 1) Compelling introduction with a strong hook, problem statement, and preview of what readers will learn, 2) Well-organized main sections with descriptive H2 headings, 3) Each section should include detailed explanations, real-world examples, statistics, and actionable insights, 4) Include practical tips, step-by-step guidance, and expert advice, 5) Add relevant quotes, case studies, or data points to support key arguments, 6) Strong conclusion with key takeaways and clear call-to-action. Format with HTML: <h1> for main title, <h2> for section headers, <h3> for subsections, <p> for paragraphs, <ul><li> for organized lists, <blockquote> for important quotes or insights, <strong> for key terms, <em> for emphasis. Aim for 1200-1500 words with comprehensive coverage, practical value, and engaging storytelling elements that keep readers interested throughout.',
-        form: [
-            {
-                label: 'Enter your blog topic',
-                field: 'input',
-                name: 'topic',
-                required:true
-            },
-            {
-                label: 'Enter blog Outline here',
-                field: 'textarea',
-                name: 'outline'
-            }
-        ]
-    },
+    // {
+    //     name: 'Blog Content',
+    //     desc: 'An AI tool that serves as your personal blog post title writer, generating catchy and viral-worthy titles in your chosen language.',
+    //     category: 'blog',
+    //     icon: '📄',
+    //     slug: 'blog-content-generation',
+    //     aiPrompt: 'Create a comprehensive, engaging, and expertly crafted blog post based on the topic and outline. Structure the content as follows: 1) Compelling introduction with a strong hook, problem statement, and preview of what readers will learn, 2) Well-organized main sections with descriptive H2 headings, 3) Each section should include detailed explanations, real-world examples, statistics, and actionable insights, 4) Include practical tips, step-by-step guidance, and expert advice, 5) Add relevant quotes, case studies, or data points to support key arguments, 6) Strong conclusion with key takeaways and clear call-to-action. Format with HTML: <h1> for main title, <h2> for section headers, <h3> for subsections, <p> for paragraphs, <ul><li> for organized lists, <blockquote> for important quotes or insights, <strong> for key terms, <em> for emphasis. Aim for 1200-1500 words with comprehensive coverage, practical value, and engaging storytelling elements that keep readers interested throughout.',
+    //     form: [
+    //         {
+    //             label: 'Enter your blog topic',
+    //             field: 'input',
+    //             name: 'topic',
+    //             required:true
+    //         },
+    //         {
+    //             label: 'Enter blog Outline here',
+    //             field: 'textarea',
+    //             name: 'outline'
+    //         }
+    //     ]
+    // },
     {
         name: 'Blog Topic Ideas',
         desc: 'An AI tool that serves as your personal blog post title writer, generating catchy and viral-worthy titles in your chosen language.',
@@ -245,60 +245,60 @@ export default  [
            
         ]
     },
-    {
-        name: 'Write Code',
-        desc: 'AI Model to generate programming code in any language',
-        icon:'💻',
-        category: 'Coding',
+    // {
+    //     name: 'Write Code',
+    //     desc: 'AI Model to generate programming code in any language',
+    //     icon:'💻',
+    //     category: 'Coding',
        
-        slug: 'write-code',
-        aiPrompt: 'Generate comprehensive, well-documented code based on the user\'s description. Provide: 1) Complete, functional code with proper syntax and structure, 2) Detailed line-by-line explanations of what each section does, 3) Code comments explaining complex logic and algorithms, 4) Multiple implementation approaches with pros and cons, 5) Error handling and edge case considerations, 6) Performance optimization suggestions, 7) Best practices and coding standards, 8) Usage examples and test cases, 9) Dependencies and setup requirements. Format with HTML: <div class="code-solution"><h2>Complete Code Solution</h2><div class="main-code"><h3>Implementation:</h3><pre><code>[clean, well-formatted code with comments]</code></pre></div></div><div class="code-explanation"><h2>Code Explanation</h2><div class="line-by-line"><h3>Line-by-Line Breakdown:</h3><ul><li><strong>Lines [X-Y]:</strong> [detailed explanation of code section]</li></ul></div><div class="logic-explanation"><h3>Algorithm & Logic:</h3><p>[detailed explanation of the approach and reasoning]</p></div></div><div class="alternatives"><h2>Alternative Approaches</h2><div class="approach"><h3>Approach 2: [Name]</h3><pre><code>[alternative implementation]</code></pre><p><strong>Pros:</strong> [advantages]</p><p><strong>Cons:</strong> [disadvantages]</p></div></div><div class="best-practices"><h2>Best Practices & Optimization</h2><ul><li>[coding best practices applied]</li><li>[performance considerations]</li><li>[security considerations if applicable]</li></ul></div><div class="usage-examples"><h2>Usage Examples</h2><pre><code>[example usage with expected outputs]</code></pre></div>. Ensure code is production-ready, well-documented, and follows industry standards.',
-        form: [
-            {
-                label: 'Enter description of code you want along with Programming Lang',
-                field: 'textarea',
-                name: 'codeDesscripton',
-                required:true
-            },
+    //     slug: 'write-code',
+    //     aiPrompt: 'Generate comprehensive, well-documented code based on the user\'s description. Provide: 1) Complete, functional code with proper syntax and structure, 2) Detailed line-by-line explanations of what each section does, 3) Code comments explaining complex logic and algorithms, 4) Multiple implementation approaches with pros and cons, 5) Error handling and edge case considerations, 6) Performance optimization suggestions, 7) Best practices and coding standards, 8) Usage examples and test cases, 9) Dependencies and setup requirements. Format with HTML: <div class="code-solution"><h2>Complete Code Solution</h2><div class="main-code"><h3>Implementation:</h3><pre><code>[clean, well-formatted code with comments]</code></pre></div></div><div class="code-explanation"><h2>Code Explanation</h2><div class="line-by-line"><h3>Line-by-Line Breakdown:</h3><ul><li><strong>Lines [X-Y]:</strong> [detailed explanation of code section]</li></ul></div><div class="logic-explanation"><h3>Algorithm & Logic:</h3><p>[detailed explanation of the approach and reasoning]</p></div></div><div class="alternatives"><h2>Alternative Approaches</h2><div class="approach"><h3>Approach 2: [Name]</h3><pre><code>[alternative implementation]</code></pre><p><strong>Pros:</strong> [advantages]</p><p><strong>Cons:</strong> [disadvantages]</p></div></div><div class="best-practices"><h2>Best Practices & Optimization</h2><ul><li>[coding best practices applied]</li><li>[performance considerations]</li><li>[security considerations if applicable]</li></ul></div><div class="usage-examples"><h2>Usage Examples</h2><pre><code>[example usage with expected outputs]</code></pre></div>. Ensure code is production-ready, well-documented, and follows industry standards.',
+    //     form: [
+    //         {
+    //             label: 'Enter description of code you want along with Programming Lang',
+    //             field: 'textarea',
+    //             name: 'codeDesscripton',
+    //             required:true
+    //         },
            
-        ]
-    },
-    {
-        name: 'Explain Code',
-        desc: 'AI Model to explain programming code in any language',
-        icon:'🔍',
-        category: 'Coding',
+    //     ]
+    // },
+    // {
+    //     name: 'Explain Code',
+    //     desc: 'AI Model to explain programming code in any language',
+    //     icon:'🔍',
+    //     category: 'Coding',
        
-        slug: 'explain-code',
-        aiPrompt: 'Provide comprehensive, educational explanation of the provided code. Include: 1) Overall purpose and functionality summary, 2) Detailed line-by-line breakdown with clear explanations, 3) Algorithm and logic flow analysis, 4) Variable and function purpose explanations, 5) Code structure and design pattern identification, 6) Performance analysis and complexity assessment, 7) Potential improvements and optimizations, 8) Security considerations and best practices, 9) Common use cases and applications, 10) Related concepts and learning resources. Format with HTML: <div class="code-analysis"><h2>Code Overview</h2><div class="original-code"><h3>Original Code:</h3><pre><code>[formatted original code]</code></pre></div><div class="purpose"><h3>Purpose & Functionality:</h3><p>[comprehensive explanation of what the code does]</p></div></div><div class="detailed-explanation"><h2>Detailed Code Breakdown</h2><div class="line-analysis"><h3>Line-by-Line Analysis:</h3><ul><li><strong>Line [number]:</strong> <code>[code snippet]</code><br><em>[detailed explanation of what this line does and why]</em></li></ul></div><div class="logic-flow"><h3>Algorithm & Logic Flow:</h3><ol><li>[step-by-step process explanation]</li></ol></div></div><div class="technical-analysis"><h2>Technical Analysis</h2><div class="variables-functions"><h3>Variables & Functions:</h3><ul><li><strong>[name]:</strong> [purpose and usage]</li></ul></div><div class="patterns"><h3>Design Patterns & Structure:</h3><p>[identification of patterns and architectural decisions]</p></div><div class="complexity"><h3>Performance & Complexity:</h3><p><strong>Time Complexity:</strong> [analysis]</p><p><strong>Space Complexity:</strong> [analysis]</p></div></div><div class="improvements"><h2>Suggestions & Best Practices</h2><ul><li><strong>Potential Improvements:</strong> [optimization suggestions]</li><li><strong>Best Practices:</strong> [coding standards and conventions]</li><li><strong>Security Considerations:</strong> [security implications if any]</li></ul></div><div class="learning-resources"><h2>Related Concepts & Learning</h2><p>[explanation of related programming concepts and where to learn more]</p></div>. Make explanations beginner-friendly while maintaining technical accuracy.',
-        form: [
-            {
-                label: 'Enter code which you want to understand',
-                field: 'textarea',
-                name: 'codeDesscripton',
-                required:true
-            },
+    //     slug: 'explain-code',
+    //     aiPrompt: 'Provide comprehensive, educational explanation of the provided code. Include: 1) Overall purpose and functionality summary, 2) Detailed line-by-line breakdown with clear explanations, 3) Algorithm and logic flow analysis, 4) Variable and function purpose explanations, 5) Code structure and design pattern identification, 6) Performance analysis and complexity assessment, 7) Potential improvements and optimizations, 8) Security considerations and best practices, 9) Common use cases and applications, 10) Related concepts and learning resources. Format with HTML: <div class="code-analysis"><h2>Code Overview</h2><div class="original-code"><h3>Original Code:</h3><pre><code>[formatted original code]</code></pre></div><div class="purpose"><h3>Purpose & Functionality:</h3><p>[comprehensive explanation of what the code does]</p></div></div><div class="detailed-explanation"><h2>Detailed Code Breakdown</h2><div class="line-analysis"><h3>Line-by-Line Analysis:</h3><ul><li><strong>Line [number]:</strong> <code>[code snippet]</code><br><em>[detailed explanation of what this line does and why]</em></li></ul></div><div class="logic-flow"><h3>Algorithm & Logic Flow:</h3><ol><li>[step-by-step process explanation]</li></ol></div></div><div class="technical-analysis"><h2>Technical Analysis</h2><div class="variables-functions"><h3>Variables & Functions:</h3><ul><li><strong>[name]:</strong> [purpose and usage]</li></ul></div><div class="patterns"><h3>Design Patterns & Structure:</h3><p>[identification of patterns and architectural decisions]</p></div><div class="complexity"><h3>Performance & Complexity:</h3><p><strong>Time Complexity:</strong> [analysis]</p><p><strong>Space Complexity:</strong> [analysis]</p></div></div><div class="improvements"><h2>Suggestions & Best Practices</h2><ul><li><strong>Potential Improvements:</strong> [optimization suggestions]</li><li><strong>Best Practices:</strong> [coding standards and conventions]</li><li><strong>Security Considerations:</strong> [security implications if any]</li></ul></div><div class="learning-resources"><h2>Related Concepts & Learning</h2><p>[explanation of related programming concepts and where to learn more]</p></div>. Make explanations beginner-friendly while maintaining technical accuracy.',
+    //     form: [
+    //         {
+    //             label: 'Enter code which you want to understand',
+    //             field: 'textarea',
+    //             name: 'codeDesscripton',
+    //             required:true
+    //         },
            
-        ]
-    },
-    {
-        name: 'Code Bug Detector',
-        desc: 'This tool analyzes your input, like error messages and code snippets, to pinpoint and fix bugs, offering detailed solutions and alternatives in a straightforward, user-friendly way.',
-        icon:'🐛',
-        category: 'code-bug-detector',
+    //     ]
+    // },
+    // {
+    //     name: 'Code Bug Detector',
+    //     desc: 'This tool analyzes your input, like error messages and code snippets, to pinpoint and fix bugs, offering detailed solutions and alternatives in a straightforward, user-friendly way.',
+    //     icon:'🐛',
+    //     category: 'code-bug-detector',
        
-        slug: 'code-bug-detector',
-        aiPrompt: 'Perform comprehensive code debugging and provide detailed solutions. Analysis includes: 1) Bug identification with specific line numbers and error types, 2) Root cause analysis explaining why each bug occurs, 3) Step-by-step solution with corrected code, 4) Multiple fix approaches with trade-offs, 5) Prevention strategies to avoid similar bugs, 6) Code quality improvements and refactoring suggestions, 7) Testing recommendations to catch future issues, 8) Performance impact analysis of fixes. Format with HTML: <div class="bug-analysis"><h2>Bug Detection Report</h2><div class="original-code"><h3>Original Code (with issues):</h3><pre><code>[original code with line numbers]</code></pre></div></div><div class="bugs-found"><h2>Bugs Identified</h2><div class="bug-item"><h3>Bug #[number]: [Bug Type]</h3><p><strong>Location:</strong> Line [number]</p><p><strong>Issue:</strong> [detailed description of the problem]</p><p><strong>Root Cause:</strong> [explanation of why this bug occurs]</p><p><strong>Impact:</strong> [consequences of this bug]</p></div></div><div class="solutions"><h2>Solutions & Fixes</h2><div class="primary-solution"><h3>Recommended Fix:</h3><pre><code>[corrected code with improvements]</code></pre><p><strong>Explanation:</strong> [why this solution works]</p></div><div class="alternative-solutions"><h3>Alternative Approaches:</h3><div class="alternative"><h4>Approach [number]:</h4><pre><code>[alternative fix]</code></pre><p><strong>Pros:</strong> [advantages]</p><p><strong>Cons:</strong> [disadvantages]</p></div></div></div><div class="improvements"><h2>Code Quality Improvements</h2><ul><li><strong>Refactoring Suggestions:</strong> [structural improvements]</li><li><strong>Best Practices:</strong> [coding standards to follow]</li><li><strong>Error Handling:</strong> [exception handling improvements]</li><li><strong>Performance Optimizations:</strong> [efficiency improvements]</li></ul></div><div class="prevention"><h2>Bug Prevention Strategies</h2><ul><li>[strategies to prevent similar bugs]</li><li>[testing approaches]</li><li>[code review checklist items]</li></ul></div><div class="testing"><h2>Testing Recommendations</h2><pre><code>[test cases to verify the fixes]</code></pre></div>. Provide educational value by explaining debugging methodology and best practices.',
-        form: [
-            {
-                label: 'Enter code which you want to test bug',
-                field: 'textarea',
-                name: 'codeInput',
-                required:true
-            },
+    //     slug: 'code-bug-detector',
+    //     aiPrompt: 'Perform comprehensive code debugging and provide detailed solutions. Analysis includes: 1) Bug identification with specific line numbers and error types, 2) Root cause analysis explaining why each bug occurs, 3) Step-by-step solution with corrected code, 4) Multiple fix approaches with trade-offs, 5) Prevention strategies to avoid similar bugs, 6) Code quality improvements and refactoring suggestions, 7) Testing recommendations to catch future issues, 8) Performance impact analysis of fixes. Format with HTML: <div class="bug-analysis"><h2>Bug Detection Report</h2><div class="original-code"><h3>Original Code (with issues):</h3><pre><code>[original code with line numbers]</code></pre></div></div><div class="bugs-found"><h2>Bugs Identified</h2><div class="bug-item"><h3>Bug #[number]: [Bug Type]</h3><p><strong>Location:</strong> Line [number]</p><p><strong>Issue:</strong> [detailed description of the problem]</p><p><strong>Root Cause:</strong> [explanation of why this bug occurs]</p><p><strong>Impact:</strong> [consequences of this bug]</p></div></div><div class="solutions"><h2>Solutions & Fixes</h2><div class="primary-solution"><h3>Recommended Fix:</h3><pre><code>[corrected code with improvements]</code></pre><p><strong>Explanation:</strong> [why this solution works]</p></div><div class="alternative-solutions"><h3>Alternative Approaches:</h3><div class="alternative"><h4>Approach [number]:</h4><pre><code>[alternative fix]</code></pre><p><strong>Pros:</strong> [advantages]</p><p><strong>Cons:</strong> [disadvantages]</p></div></div></div><div class="improvements"><h2>Code Quality Improvements</h2><ul><li><strong>Refactoring Suggestions:</strong> [structural improvements]</li><li><strong>Best Practices:</strong> [coding standards to follow]</li><li><strong>Error Handling:</strong> [exception handling improvements]</li><li><strong>Performance Optimizations:</strong> [efficiency improvements]</li></ul></div><div class="prevention"><h2>Bug Prevention Strategies</h2><ul><li>[strategies to prevent similar bugs]</li><li>[testing approaches]</li><li>[code review checklist items]</li></ul></div><div class="testing"><h2>Testing Recommendations</h2><pre><code>[test cases to verify the fixes]</code></pre></div>. Provide educational value by explaining debugging methodology and best practices.',
+    //     form: [
+    //         {
+    //             label: 'Enter code which you want to test bug',
+    //             field: 'textarea',
+    //             name: 'codeInput',
+    //             required:true
+    //         },
            
-        ]
-    },
+    //     ]
+    // },
     {
         name: 'Tagline Generator',
         desc: 'Struggling to find the perfect tagline for your brand? Let our AI-tool assist you in creating a tagline that stands out.',
@@ -429,44 +429,44 @@ export default  [
     },
 
     // CODE TEMPLATES
-    {
-        name: 'Advanced Code Generator',
-        desc: 'Generate production-ready code with documentation, testing, and best practices for any programming language and project type.',
-        icon: '💻',
-        category: 'Programming',
-        slug: 'advanced-code-generator',
-        aiPrompt: 'Generate comprehensive, production-ready code. Include: 1) Complete functional code with proper architecture, 2) Detailed inline documentation and comments, 3) Error handling and input validation, 4) Unit tests with multiple test cases, 5) Performance optimizations, 6) Setup and configuration instructions, 7) Usage examples with sample inputs/outputs, 8) Dependencies and requirements list, 9) API documentation if applicable, 10) Best practices implementation. Format with HTML: use <h1> for title, <h2> for sections, <pre><code> for code blocks, <ul><li> for lists, <strong> for emphasis. Ensure code is secure, efficient, and follows industry standards.',
-        form: [
-            {
-                label: 'Programming Language',
-                field: 'input',
-                name: 'language',
-                required: true
-            },
-            {
-                label: 'Project Description',
-                field: 'textarea',
-                name: 'description',
-                required: true
-            },
-            {
-                label: 'Specific Requirements & Features',
-                field: 'textarea',
-                name: 'requirements',
-                required: true
-            },
-            {
-                label: 'Complexity Level (Beginner/Intermediate/Advanced)',
-                field: 'input',
-                name: 'complexity'
-            },
-            {
-                label: 'Framework/Libraries to Use (Optional)',
-                field: 'input',
-                name: 'frameworks'
-            }
-        ]
-    },
+    // {
+    //     name: 'Advanced Code Generator',
+    //     desc: 'Generate production-ready code with documentation, testing, and best practices for any programming language and project type.',
+    //     icon: '💻',
+    //     category: 'Programming',
+    //     slug: 'advanced-code-generator',
+    //     aiPrompt: 'Generate comprehensive, production-ready code. Include: 1) Complete functional code with proper architecture, 2) Detailed inline documentation and comments, 3) Error handling and input validation, 4) Unit tests with multiple test cases, 5) Performance optimizations, 6) Setup and configuration instructions, 7) Usage examples with sample inputs/outputs, 8) Dependencies and requirements list, 9) API documentation if applicable, 10) Best practices implementation. Format with HTML: use <h1> for title, <h2> for sections, <pre><code> for code blocks, <ul><li> for lists, <strong> for emphasis. Ensure code is secure, efficient, and follows industry standards.',
+    //     form: [
+    //         {
+    //             label: 'Programming Language',
+    //             field: 'input',
+    //             name: 'language',
+    //             required: true
+    //         },
+    //         {
+    //             label: 'Project Description',
+    //             field: 'textarea',
+    //             name: 'description',
+    //             required: true
+    //         },
+    //         {
+    //             label: 'Specific Requirements & Features',
+    //             field: 'textarea',
+    //             name: 'requirements',
+    //             required: true
+    //         },
+    //         {
+    //             label: 'Complexity Level (Beginner/Intermediate/Advanced)',
+    //             field: 'input',
+    //             name: 'complexity'
+    //         },
+    //         {
+    //             label: 'Framework/Libraries to Use (Optional)',
+    //             field: 'input',
+    //             name: 'frameworks'
+    //         }
+    //     ]
+    // },
 
     // BUSINESS DOCUMENTS TEMPLATES
     {

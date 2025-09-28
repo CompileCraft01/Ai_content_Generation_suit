@@ -3,35 +3,65 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useStorage, useMutation, useOthers, useMyPresence } from '@/liveblocks.config';
 import { generateMindMapFromContent, MindMapNode } from '@/lib/contentAnalyzer';
+import { Modal } from '@/components/ui/modal';
 
 // Custom node component for editable text
-const EditableNode = ({ data, id }: { data: any; id: string }) => {
+const EditableNode = ({ data, id, position, onPositionChange, onAddResearchNode }: { 
+  data: any; 
+  id: string; 
+  position: { x: number; y: number };
+  onPositionChange: (id: string, newPosition: { x: number; y: number }) => void;
+  onAddResearchNode: (parentId: string, title: string, content: string, type: 'quick' | 'deep') => void;
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(data.label || '');
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [showButtons, setShowButtons] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResult, setSearchResult] = useState<string>('');
+  const [showModal, setShowModal] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [currentSearchType, setCurrentSearchType] = useState<'quick' | 'deep'>('quick');
   
   const updateNodeText = useMutation(({ storage }, nodeId: string, newText: string) => {
     const mindMap = storage.get('mindMap');
-    if (mindMap) {
+    if (mindMap && mindMap.root) {
       const updateNode = (node: any): any => {
+        // Add null check for node
+        if (!node || !node.id) {
+          return node;
+        }
+        
         if (node.id === nodeId) {
           return { ...node, text: newText };
         }
-        if (node.children) {
+        
+        if (node.children && Array.isArray(node.children)) {
           return {
             ...node,
             children: node.children.map(updateNode)
           };
         }
+        
         return node;
       };
       
-      const updatedRoot = updateNode(mindMap.get('root'));
-      mindMap.set('root', updatedRoot);
+      try {
+        const updatedRoot = updateNode(mindMap.root);
+        if (updatedRoot) {
+          mindMap.set('root', updatedRoot);
+        }
+      } catch (error) {
+        console.error('Error updating node text:', error);
+      }
     }
   }, []);
 
   const handleDoubleClick = () => {
-    setIsEditing(true);
+    if (!isDragging) {
+      setIsEditing(true);
+    }
   };
 
   const handleBlur = () => {
@@ -47,9 +77,131 @@ const EditableNode = ({ data, id }: { data: any; id: string }) => {
     }
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isEditing) return;
+    
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
+    e.preventDefault();
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isDragging) {
+      const newPosition = {
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      };
+      onPositionChange(id, newPosition);
+    }
+  }, [isDragging, dragStart, id, onPositionChange]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
   useEffect(() => {
     setText(data.label || '');
   }, [data.label]);
+
+  // Quick search using fallback APIs
+  const handleQuickSearch = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isSearching) return;
+    
+    setIsSearching(true);
+    setCurrentSearchType('quick');
+    try {
+      const response = await fetch('/api/quick-search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: text }),
+      });
+      
+      const data = await response.json();
+      if (data.success && data.result) {
+        setSearchResult(data.result);
+        setModalTitle(`Quick Search: ${text}`);
+        setShowModal(true);
+      } else {
+        console.error('Quick search error:', data);
+        alert('Quick search failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Quick search error:', error);
+      alert('Quick search failed. Please try again.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Deep research using Jina AI
+  const handleDeepResearch = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isSearching) return;
+    
+    setIsSearching(true);
+    setCurrentSearchType('deep');
+    try {
+      const response = await fetch('/api/deep-research', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: text }),
+      });
+      
+      const data = await response.json();
+      if (data.success && data.result) {
+        setSearchResult(data.result);
+        setModalTitle(`Deep Research: ${text}`);
+        setShowModal(true);
+      } else {
+        console.error('Deep research error:', data);
+        alert('Deep research failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Deep research error:', error);
+      alert('Deep research failed. Please try again.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Handle adding research as a new node
+  const handleAddAsNode = () => {
+    if (searchResult && onAddResearchNode && text) {
+      try {
+        const title = `${currentSearchType === 'quick' ? 'Quick' : 'Deep'} Research: ${text}`;
+        console.log('Adding research node:', { id, title, searchResult: searchResult.substring(0, 100) + '...' });
+        onAddResearchNode(id, title, searchResult, currentSearchType);
+        setShowModal(false);
+        // Show success message
+        alert('Research added as new node successfully!');
+      } catch (error) {
+        console.error('Error adding research node:', error);
+        alert('Failed to add research as node. Please try again.');
+      }
+    } else {
+      console.warn('Cannot add research node:', { searchResult: !!searchResult, onAddResearchNode: !!onAddResearchNode, text });
+      alert('Unable to add research node. Missing required data.');
+    }
+  };
 
   const level = data.level || 0;
   const nodeType = data.type || 'detail';
@@ -90,22 +242,89 @@ const EditableNode = ({ data, id }: { data: any; id: string }) => {
 
   return (
     <div
-      className={getNodeStyle()}
-      onDoubleClick={handleDoubleClick}
+      className="relative group"
+      onMouseEnter={() => setShowButtons(true)}
+      onMouseLeave={() => setShowButtons(false)}
     >
-      {isEditing ? (
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onBlur={handleBlur}
-          onKeyPress={handleKeyPress}
-          className={getInputStyle()}
-          autoFocus
-        />
-      ) : (
-        <div className={getTextStyle()}>{text}</div>
+      {/* Research buttons - positioned on sides */}
+      {showButtons && !isEditing && !isDragging && (
+        <>
+          {/* Quick Search Button - Left side */}
+          <button
+            onClick={handleQuickSearch}
+            disabled={isSearching}
+            className="absolute -left-8 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg z-10 transition-all duration-200"
+            title="Quick Search (Gemini)"
+          >
+            {isSearching ? '...' : 'Q'}
+          </button>
+          
+          {/* Deep Research Button - Right side */}
+          <button
+            onClick={handleDeepResearch}
+            disabled={isSearching}
+            className="absolute -right-8 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-300 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg z-10 transition-all duration-200"
+            title="Deep Research (Jina AI)"
+          >
+            {isSearching ? '...' : 'D'}
+          </button>
+        </>
       )}
+      
+      {/* Main node */}
+      <div
+        className={`${getNodeStyle()} ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} select-none relative`}
+        onDoubleClick={handleDoubleClick}
+        onMouseDown={handleMouseDown}
+      >
+        {isEditing ? (
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onBlur={handleBlur}
+            onKeyPress={handleKeyPress}
+            className={getInputStyle()}
+            autoFocus
+          />
+        ) : (
+          <div className={getTextStyle()}>{text}</div>
+        )}
+        
+        {/* Loading indicator */}
+        {isSearching && (
+          <div className="absolute inset-0 bg-black bg-opacity-20 rounded-lg flex items-center justify-center">
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+          </div>
+        )}
+      </div>
+      
+      {/* Search Result Modal */}
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={modalTitle}
+      >
+        <div className="prose max-w-none">
+          <div className="text-sm text-gray-700 bg-gray-50 p-4 rounded-lg whitespace-pre-wrap leading-relaxed mb-4">
+            {searchResult}
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={handleAddAsNode}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
+            >
+              Add as New Node
+            </button>
+            <button
+              onClick={() => setShowModal(false)}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors text-sm"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
@@ -143,8 +362,8 @@ const convertToSimpleNodes = (mindMapData: any): any[] => {
     const rootNode = nodeMap.get('root');
     if (!rootNode) return;
 
-    // Position root node at center
-    rootNode.position = { x: 400, y: 200 };
+    // Position root node at center of larger canvas
+    rootNode.position = { x: 800, y: 600 };
     nodes.push({
       id: rootNode.id,
       type: 'editable',
@@ -156,14 +375,14 @@ const convertToSimpleNodes = (mindMapData: any): any[] => {
       },
     });
 
-    // Position level 1 nodes in a circle around root
+    // Position level 1 nodes in a circle around root with larger radius
     const level1Nodes = Array.from(nodeMap.values()).filter(n => n.level === 1);
     level1Nodes.forEach((node, index) => {
       const angle = (index / level1Nodes.length) * 2 * Math.PI;
-      const radius = 300;
+      const radius = 400; // Increased radius for more space
       node.position = {
-        x: 400 + radius * Math.cos(angle),
-        y: 200 + radius * Math.sin(angle)
+        x: 800 + radius * Math.cos(angle),
+        y: 600 + radius * Math.sin(angle)
       };
       
       nodes.push({
@@ -186,7 +405,7 @@ const convertToSimpleNodes = (mindMapData: any): any[] => {
         const siblingNodes = higherLevelNodes.filter(n => n.parentId === node.parentId);
         const siblingIndex = siblingNodes.indexOf(node);
         const angle = (siblingIndex / siblingNodes.length) * 2 * Math.PI;
-        const radius = 180;
+        const radius = 250; // Increased radius for more space
         
         node.position = {
           x: parent.position.x + radius * Math.cos(angle),
@@ -229,11 +448,88 @@ const CollaborativeMindMap: React.FC<CollaborativeMindMapProps> = ({ content, in
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [lastContentHash, setLastContentHash] = useState<string>('');
 
+  // Handle position changes for dragging
+  const handlePositionChange = useCallback((nodeId: string, newPosition: { x: number; y: number }) => {
+    setNodes(prevNodes =>
+      prevNodes.map(node =>
+        node.id === nodeId
+          ? { ...node, position: newPosition }
+          : node
+      )
+    );
+  }, []);
+
+  // Add research result as a new node
+  const addResearchNode = useMutation(({ storage }, parentId: string, title: string, content: string, type: 'quick' | 'deep') => {
+    const mindMap = storage.get('mindMap');
+    if (mindMap && mindMap.root) {
+      const findAndAddToNode = (node: any): any => {
+        // Add null check for node
+        if (!node || !node.id) {
+          return node;
+        }
+        
+        if (node.id === parentId) {
+          const newNodeId = `research-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          const newChild = {
+            id: newNodeId,
+            text: title,
+            children: [{
+              id: `${newNodeId}-content`,
+              text: content.length > 100 ? content.substring(0, 100) + '...' : content,
+              children: []
+            }]
+          };
+          console.log('Adding research node to parent:', parentId, 'New node:', newChild);
+          return {
+            ...node,
+            children: [...(node.children || []), newChild]
+          };
+        }
+        
+        if (node.children && Array.isArray(node.children)) {
+          return {
+            ...node,
+            children: node.children.map(findAndAddToNode)
+          };
+        }
+        
+        return node;
+      };
+      
+      try {
+        const updatedRoot = findAndAddToNode(mindMap.root);
+        if (updatedRoot) {
+          mindMap.set('root', updatedRoot);
+          console.log('Research node added successfully, updated root:', updatedRoot);
+          
+          // Force immediate node refresh
+          setTimeout(() => {
+            const newNodes = convertToSimpleNodes({ root: updatedRoot });
+            console.log('Forcing immediate node refresh with', newNodes.length, 'nodes');
+            setNodes(newNodes);
+          }, 50);
+        }
+      } catch (error) {
+        console.error('Error adding research node:', error);
+      }
+    }
+  }, []);
+
+  const handleAddResearchNode = useCallback((parentId: string, title: string, content: string, type: 'quick' | 'deep') => {
+    addResearchNode(parentId, title, content, type);
+  }, [addResearchNode]);
+
   // Add new node mutation
   const addNode = useMutation(({ storage }, parentId: string, text: string) => {
     const mindMap = storage.get('mindMap');
-    if (mindMap) {
+    if (mindMap && mindMap.root) {
       const addNodeToTree = (node: any): any => {
+        // Add null check for node
+        if (!node || !node.id) {
+          return node;
+        }
+        
         if (node.id === parentId) {
           const newNode = {
             id: `node-${Date.now()}`,
@@ -245,17 +541,25 @@ const CollaborativeMindMap: React.FC<CollaborativeMindMapProps> = ({ content, in
             children: [...(node.children || []), newNode]
           };
         }
-        if (node.children) {
+        
+        if (node.children && Array.isArray(node.children)) {
           return {
             ...node,
             children: node.children.map(addNodeToTree)
           };
         }
+        
         return node;
       };
       
-      const updatedRoot = addNodeToTree(mindMap.get('root'));
-      mindMap.set('root', updatedRoot);
+      try {
+        const updatedRoot = addNodeToTree(mindMap.root);
+        if (updatedRoot) {
+          mindMap.set('root', updatedRoot);
+        }
+      } catch (error) {
+        console.error('Error adding node:', error);
+      }
     }
   }, []);
 
@@ -297,7 +601,7 @@ const CollaborativeMindMap: React.FC<CollaborativeMindMapProps> = ({ content, in
   const initializeMindMap = useMutation(({ storage }) => {
     const mindMap = storage.get('mindMap');
     if (mindMap) {
-      const root = mindMap.get('root');
+      const root = mindMap.root;
       if (!root) {
         const defaultRoot = {
           id: 'root',
@@ -323,25 +627,25 @@ const CollaborativeMindMap: React.FC<CollaborativeMindMapProps> = ({ content, in
   // Initialize mind map when data is available
   useEffect(() => {
     if (mindMapData && !isInitialized) {
-      // Check if we have root data, if not initialize
-      if (!mindMapData.root) {
-        // Use AI-generated mind map if available
-        if (initialMindMap && initialMindMap.root) {
-          console.log('Using AI-generated mind map:', initialMindMap);
-          initializeMindMap(initialMindMap.root);
-        } else {
-          // If we have text content, generate mind map from it
-          const currentContent = textContent || content;
-          if (currentContent && currentContent.trim().length > 0) {
-            generateMindMapFromText(currentContent);
-          } else {
-            initializeMindMap();
-          }
-        }
+      // Always regenerate from content if available
+      const currentContent = textContent || content;
+      if (currentContent && currentContent.trim().length > 20) {
+        console.log('Generating mind map from content:', currentContent.substring(0, 100) + '...');
+        generateMindMapFromText(currentContent);
+      } else if (!mindMapData.root) {
+        initializeMindMap();
       }
       setIsInitialized(true);
     }
-  }, [mindMapData, isInitialized, initializeMindMap, generateMindMapFromText, textContent, content, initialMindMap]);
+  }, [mindMapData, isInitialized, initializeMindMap, generateMindMapFromText, textContent, content]);
+
+  // Force regeneration when content prop changes
+  useEffect(() => {
+    if (content && content.trim().length > 20 && isInitialized) {
+      console.log('Content prop changed, regenerating mind map');
+      generateMindMapFromText(content);
+    }
+  }, [content, generateMindMapFromText, isInitialized]);
 
   // Update nodes when mind map data changes
   useEffect(() => {
@@ -416,7 +720,7 @@ const CollaborativeMindMap: React.FC<CollaborativeMindMapProps> = ({ content, in
 
   if (!isInitialized) {
     return (
-      <div className="w-full h-[600px] bg-gray-50 flex items-center justify-center">
+      <div className="w-full h-[800px] bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Initializing collaborative mind map...</p>
@@ -440,7 +744,7 @@ const CollaborativeMindMap: React.FC<CollaborativeMindMapProps> = ({ content, in
   console.log('Mind map render - nodes:', nodes);
 
   return (
-    <div className="w-full h-[600px] bg-gray-50 relative overflow-auto">
+    <div className="w-full h-[800px] bg-gray-50 relative overflow-auto">
       <div className="absolute top-2 left-2 z-10 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 text-xs text-gray-600 shadow-sm">
         💡 Double-click nodes to edit • Right-click to add children • Drag to move
         <br />
@@ -494,12 +798,75 @@ const CollaborativeMindMap: React.FC<CollaborativeMindMapProps> = ({ content, in
           className="bg-gray-800 hover:bg-gray-700 disabled:bg-gray-400 text-white px-3 py-1 rounded-md text-xs font-medium transition-colors"
           title="Regenerate mind map from text content"
         >
-          🔄 Sync from Text
+          🔄 {isRegenerating ? 'Generating...' : 'Sync from Text'}
         </button>
       </div>
       
-      {/* Simple mind map visualization */}
-      <div className="relative w-full h-full p-8">
+      {/* Mind map visualization with arrows */}
+      <div className="relative w-[1600px] h-[1200px] p-8 min-w-full min-h-full">
+        {/* Render SVG arrows first (behind nodes) */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+          <defs>
+            <marker
+              id="arrowhead"
+              markerWidth="10"
+              markerHeight="7"
+              refX="9"
+              refY="3.5"
+              orient="auto"
+            >
+              <polygon
+                points="0 0, 10 3.5, 0 7"
+                fill="#4f46e5"
+                stroke="#4f46e5"
+                strokeWidth="1"
+              />
+            </marker>
+          </defs>
+          {(() => {
+            const connections: JSX.Element[] = [];
+            
+            // Create connections based on the mind map structure
+            const createConnections = (parentNode: any, parentPosition: any) => {
+              if (parentNode.children && parentNode.children.length > 0) {
+                parentNode.children.forEach((child: any) => {
+                  // Find the child node in our nodes array
+                  const childNodeData = nodes.find(n => n.id === child.id);
+                  if (childNodeData) {
+                    connections.push(
+                      <line
+                        key={`${parentNode.id}-${child.id}`}
+                        x1={parentPosition.x}
+                        y1={parentPosition.y}
+                        x2={childNodeData.position.x}
+                        y2={childNodeData.position.y}
+                        stroke="#4f46e5"
+                        strokeWidth="2"
+                        markerEnd="url(#arrowhead)"
+                        opacity="0.8"
+                      />
+                    );
+                    
+                    // Recursively create connections for children
+                    createConnections(child, childNodeData.position);
+                  }
+                });
+              }
+            };
+            
+            // Start from root
+            if (mindMapData?.root) {
+              const rootNode = nodes.find(n => n.id === 'root');
+              if (rootNode) {
+                createConnections(mindMapData.root, rootNode.position);
+              }
+            }
+            
+            return connections;
+          })()}
+        </svg>
+        
+        {/* Render nodes on top of arrows */}
         {nodes.map((node) => (
           <div
             key={node.id}
@@ -507,12 +874,18 @@ const CollaborativeMindMap: React.FC<CollaborativeMindMapProps> = ({ content, in
             style={{
               left: node.position.x,
               top: node.position.y,
-              transform: 'translate(-50%, -50%)'
+              transform: 'translate(-50%, -50%)',
+              zIndex: 2
             }}
-            onDoubleClick={(e) => onNodeDoubleClick(e, node)}
             onContextMenu={(e) => onNodeContextMenu(e, node)}
           >
-            <EditableNode data={node.data} id={node.id} />
+                    <EditableNode
+                      data={node.data}
+                      id={node.id}
+                      position={node.position}
+                      onPositionChange={handlePositionChange}
+                      onAddResearchNode={handleAddResearchNode}
+                    />
           </div>
         ))}
       </div>
